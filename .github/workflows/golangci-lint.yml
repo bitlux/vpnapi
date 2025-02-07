@@ -18,10 +18,10 @@ jobs:
         with:
           cache: false  # For https://github.com/actions/setup-go/issues/427
           go-version: 'stable'
+      - name: Download config
+        run: curl -fsS -o .golangci.yml https://raw.githubusercontent.com/bitlux/bitlux/main/golangci.yml
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v6
         with:
           version: latest
           args: --verbose
-
-
