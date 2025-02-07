@@ -12,6 +12,7 @@ const baseURL = "https://vpnapi.io/api/"
 
 var ErrRateLimited = errors.New("rate limited, try again later")
 
+// The security section of a response
 type Security struct {
 	VPN   bool `json:"vpn"`
 	Proxy bool `json:"proxy"`
@@ -19,6 +20,7 @@ type Security struct {
 	Relay bool `json:"relay"`
 }
 
+// The location section of a response
 type Location struct {
 	City              string `json:"city"`
 	Region            string `json:"region"`
@@ -34,12 +36,14 @@ type Location struct {
 	IsInEuropeanUnion bool   `json:"is_in_european_union"`
 }
 
+// The network section of a response
 type Network struct {
 	Network                      string `json:"network"`
 	AutonomousSystemNumber       string `json:"autonomous_system_number"`
 	AutonomousSystemOrganization string `json:"autonomous_system_organization"`
 }
 
+// The response type returned from a query
 type Response struct {
 	IP       string   `json:"ip"`
 	Security Security `json:"security"`
@@ -47,14 +51,17 @@ type Response struct {
 	Network  Network  `json:"network"`
 }
 
+// Client makes queries to the API.
 type Client struct {
 	apiKey string
 }
 
+// New creates a new Client. Obtain an API key by registering at vpnapi.io.
 func New(apiKey string) *Client {
 	return &Client{apiKey: apiKey}
 }
 
+// Query queries the API for details about ip.
 func (c *Client) Query(ip string) (*Response, error) {
 	resp, err := http.Get(baseURL + ip + "?" + c.apiKey)
 	if err != nil {
@@ -81,35 +88,3 @@ func (c *Client) Query(ip string) (*Response, error) {
 
 	return ret, nil
 }
-
-/*
-	{
-    "ip": "8.8.8.8",
-    "security": {
-        "vpn": false,
-        "proxy": false,
-        "tor": false,
-        "relay": false,
-    },
-    "location": {
-        "city": "",
-        "region": "",
-        "country": "United States",
-        "continent": "North America",
-        "region_code": "",
-        "country_code": "US",
-        "continent_code": "NA",
-        "latitude": "37.7510",
-        "longitude": "-97.8220",
-        "time_zone": "America/Chicago",
-        "locale_code": "en",
-        "metro_code": "",
-        "is_in_european_union": false
-    },
-    "network": {
-        "network": "8.8.8.0/24",
-        "autonomous_system_number": "AS15169",
-        "autonomous_system_organization": "GOOGLE"
-    }
-}
-*/
