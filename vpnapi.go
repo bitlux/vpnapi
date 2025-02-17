@@ -73,7 +73,7 @@ func (c *Client) SetVerbose(v bool) *Client {
 func (c *Client) Query(ip string) (*Response, error) {
 	url := baseURL + ip + "?key="
 	if c.verbose {
-		fmt.Printf("Querying %q\n", url+"XXXXX")
+		fmt.Printf("Querying %s\n", url+"XXXXX")
 	}
 	resp, err := http.Get(url + c.apiKey)
 	if err != nil {
@@ -87,7 +87,7 @@ func (c *Client) Query(ip string) (*Response, error) {
 	}
 
 	if c.verbose {
-		fmt.Printf("Got response %q\n", string(body))
+		fmt.Printf("Got response %s\n", string(body))
 	}
 
 	if code := resp.StatusCode; code > 299 {
