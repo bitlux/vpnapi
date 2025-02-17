@@ -49,11 +49,13 @@ type Response struct {
 	Security Security `json:"security"`
 	Location Location `json:"location"`
 	Network  Network  `json:"network"`
+	Message  string   `json:"message"`
 }
 
 // Client makes queries to the API.
 type Client struct {
-	apiKey string
+	apiKey  string
+	verbose bool
 }
 
 // New creates a new Client. Obtain an API key by registering at vpnapi.io.
@@ -61,9 +63,19 @@ func New(apiKey string) *Client {
 	return &Client{apiKey: apiKey}
 }
 
+// SetVerbose toggles verbose output to stdout.
+func (c *Client) SetVerbose(v bool) *Client {
+	c.verbose = v
+	return c
+}
+
 // Query queries the API for details about ip.
 func (c *Client) Query(ip string) (*Response, error) {
-	resp, err := http.Get(baseURL + ip + "?" + c.apiKey)
+	url := baseURL + ip + "?key="
+	if c.verbose {
+		fmt.Printf("Querying %q\n", url+"XXXXX")
+	}
+	resp, err := http.Get(url + c.apiKey)
 	if err != nil {
 		return nil, err
 	}
@@ -72,6 +84,10 @@ func (c *Client) Query(ip string) (*Response, error) {
 	resp.Body.Close()
 	if err != nil {
 		return nil, err
+	}
+
+	if c.verbose {
+		fmt.Printf("Got response %q\n", string(body))
 	}
 
 	if code := resp.StatusCode; code > 299 {
