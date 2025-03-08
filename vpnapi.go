@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 )
 
 const baseURL = "https://vpnapi.io/api/"
@@ -20,6 +21,10 @@ type Security struct {
 	Relay bool `json:"relay"`
 }
 
+func (s Security) String() string {
+	return fmt.Sprintf("VPN: %t proxy: %t Tor: %t relay: %t", s.VPN, s.Proxy, s.Tor, s.Relay)
+}
+
 // The location section of a response
 type Location struct {
 	City              string `json:"city"`
@@ -27,6 +32,7 @@ type Location struct {
 	Country           string `json:"country"`
 	Continent         string `json:"contient"`
 	RegionCode        string `json:"region_code"`
+	CountryCode       string `json:"country_code"`
 	ContinentCode     string `json:"continent_code"`
 	Latitude          string `json:"latitude"`
 	Longitude         string `json:"longitude"`
@@ -36,11 +42,19 @@ type Location struct {
 	IsInEuropeanUnion bool   `json:"is_in_european_union"`
 }
 
+func (l Location) String() string {
+	return fmt.Sprintf("%s, %s %s", l.City, l.Region, l.CountryCode)
+}
+
 // The network section of a response
 type Network struct {
 	Network                      string `json:"network"`
 	AutonomousSystemNumber       string `json:"autonomous_system_number"`
 	AutonomousSystemOrganization string `json:"autonomous_system_organization"`
+}
+
+func (n Network) String() string {
+	return fmt.Sprintf("%s (%s)", n.AutonomousSystemOrganization, n.AutonomousSystemNumber)
 }
 
 // The response type returned from a query
@@ -50,6 +64,14 @@ type Response struct {
 	Location Location `json:"location"`
 	Network  Network  `json:"network"`
 	Message  string   `json:"message"`
+}
+
+func (r Response) String() string {
+	ret := fmt.Sprintf("IP: %s\nSecurity: %s\nLocation: %s\nNetwork: %s\n", r.IP, r.Security, r.Location, r.Network)
+	if r.Message != "" {
+		ret += fmt.Sprintf("Message: %s\n", r.Message)
+	}
+	return ret
 }
 
 // Client makes queries to the API.
@@ -87,7 +109,13 @@ func (c *Client) Query(ip string) (*Response, error) {
 	}
 
 	if c.verbose {
-		fmt.Printf("Got response %s\n", string(body))
+		tokens := strings.Fields(string(body))
+		tmp := resp.Status + " \"" + strings.Join(tokens, " ")
+		if len(tmp) > 80 {
+			tmp = tmp[0:80] + "[...]"
+		}
+		tmp += "\""
+		fmt.Printf("Got response %s\n", tmp)
 	}
 
 	if code := resp.StatusCode; code > 299 {
@@ -100,6 +128,10 @@ func (c *Client) Query(ip string) (*Response, error) {
 	ret := &Response{}
 	if err = json.Unmarshal(body, ret); err != nil {
 		return nil, err
+	}
+
+	if c.verbose {
+		fmt.Printf("Parsed response:\n%s", ret)
 	}
 
 	return ret, nil
