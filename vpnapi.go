@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"strings"
 )
 
 const baseURL = "https://vpnapi.io/api/"
@@ -76,8 +75,9 @@ func (r Response) String() string {
 
 // Client makes queries to the API.
 type Client struct {
-	apiKey  string
-	verbose bool
+	apiKey     string
+	onRequest  func(string)
+	onResponse func(string, []byte)
 }
 
 // New creates a new Client. Obtain an API key by registering at vpnapi.io.
@@ -86,17 +86,33 @@ func New(apiKey string) *Client {
 }
 
 // SetVerbose toggles verbose output to stdout.
-func (c *Client) SetVerbose(v bool) *Client {
-	c.verbose = v
+//
+// Deprecated: SetVerbose has no effect
+func (c *Client) SetVerbose(bool) *Client {
+	return c
+}
+
+// SetOnRequest sets a hook to execute before a request is made. The argument is the URL that is
+// to be queried with the API key redacted.
+func (c *Client) SetOnRequest(f func(string)) *Client {
+	c.onRequest = f
+	return c
+}
+
+// SetOnResponse sets a hook to execute once a response is received, before it is parsed. The
+// arguments are the HTTP status and response body.
+func (c *Client) SetOnResponse(f func(string, []byte)) *Client {
+	c.onResponse = f
 	return c
 }
 
 // Query queries the API for details about ip.
 func (c *Client) Query(ip string) (*Response, error) {
 	url := baseURL + ip + "?key="
-	if c.verbose {
-		fmt.Printf("Querying %s\n", url+"XXXXX")
+	if c.onRequest != nil {
+		c.onRequest(url + "[redacted]")
 	}
+
 	resp, err := http.Get(url + c.apiKey)
 	if err != nil {
 		return nil, err
@@ -108,14 +124,8 @@ func (c *Client) Query(ip string) (*Response, error) {
 		return nil, err
 	}
 
-	if c.verbose {
-		tokens := strings.Fields(string(body))
-		tmp := resp.Status + " \"" + strings.Join(tokens, " ")
-		if len(tmp) > 80 {
-			tmp = tmp[0:80] + "[...]"
-		}
-		tmp += "\""
-		fmt.Printf("Got response %s\n", tmp)
+	if c.onResponse != nil {
+		c.onResponse(resp.Status, body)
 	}
 
 	if code := resp.StatusCode; code > 299 {
@@ -129,10 +139,5 @@ func (c *Client) Query(ip string) (*Response, error) {
 	if err = json.Unmarshal(body, ret); err != nil {
 		return nil, err
 	}
-
-	if c.verbose {
-		fmt.Printf("Parsed response:\n%s", ret)
-	}
-
 	return ret, nil
 }
