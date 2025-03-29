@@ -42,9 +42,7 @@ func TestString(t *testing.T) {
 Security: VPN: false proxy: false Tor: false relay: false
 Location: Sunnyvale, California US
 Network: COMCAST-7922 (AS7922)
-Message: this is the message
-`
-
+Message: this is the message`
 	if got := r.String(); got != want {
 		t.Errorf("String(): %s != %s", got, want)
 	}
