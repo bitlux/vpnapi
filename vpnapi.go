@@ -20,6 +20,7 @@ type Security struct {
 	Relay bool `json:"relay"`
 }
 
+// String returns a string represestation of s.
 func (s Security) String() string {
 	return fmt.Sprintf("VPN: %t proxy: %t Tor: %t relay: %t", s.VPN, s.Proxy, s.Tor, s.Relay)
 }
@@ -41,6 +42,7 @@ type Location struct {
 	IsInEuropeanUnion bool   `json:"is_in_european_union"`
 }
 
+// String returns a string represestation of l.
 func (l Location) String() string {
 	return fmt.Sprintf("%s, %s %s", l.City, l.Region, l.CountryCode)
 }
@@ -52,6 +54,7 @@ type Network struct {
 	AutonomousSystemOrganization string `json:"autonomous_system_organization"`
 }
 
+// String returns a string represestation of n.
 func (n Network) String() string {
 	return fmt.Sprintf("%s (%s)", n.AutonomousSystemOrganization, n.AutonomousSystemNumber)
 }
@@ -65,10 +68,11 @@ type Response struct {
 	Message  string   `json:"message"`
 }
 
+// String returns a string represestation of r.
 func (r Response) String() string {
-	ret := fmt.Sprintf("IP: %s\nSecurity: %s\nLocation: %s\nNetwork: %s\n", r.IP, r.Security, r.Location, r.Network)
+	ret := fmt.Sprintf("IP: %s\nSecurity: %s\nLocation: %s\nNetwork: %s", r.IP, r.Security, r.Location, r.Network)
 	if r.Message != "" {
-		ret += fmt.Sprintf("Message: %s\n", r.Message)
+		ret += fmt.Sprintf("\nMessage: %s", r.Message)
 	}
 	return ret
 }
